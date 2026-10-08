@@ -1,0 +1,1125 @@
+const express = require("express");
+const cors = require("cors");
+const bcrypt = require("bcryptjs");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
+const crypto = require("crypto");
+
+const { readDatabase, writeDatabase } = require("./database");
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+const publicDir = path.join(__dirname, "public");
+const uploadsDir = path.join(__dirname, "uploads");
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+app.use(cors());
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: true, limit: "2mb" }));
+
+app.use(express.static(publicDir));
+app.use("/uploads", express.static(uploadsDir));
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+
+  filename: (req, file, cb) => {
+    const extension = path.extname(file.originalname).toLowerCase();
+    const filename =
+      Date.now() +
+      "-" +
+      crypto.randomBytes(8).toString("hex") +
+      extension;
+
+    cb(null, filename);
+  }
+});
+
+const upload = multer({
+  storage,
+
+  limits: {
+    fileSize: 5 * 1024 * 1024
+  },
+
+  fileFilter: (req, file, cb) => {
+    const allowed = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif"
+    ];
+
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Format d'image non autorisé."));
+    }
+  }
+});
+
+
+function generateId() {
+  return crypto.randomUUID();
+}
+
+
+function cleanEmail(email) {
+  return String(email || "").trim().toLowerCase();
+}
+
+
+function publicMember(member) {
+  if (!member) return null;
+
+  return {
+    id: member.id,
+    name: member.name,
+    email: member.email,
+    country: member.country,
+    skills: member.skills || "",
+    bio: member.bio || "",
+    ideas: member.ideas || "",
+    links: member.links || "",
+    photo: member.photo || "",
+    role: member.role,
+    status: member.status,
+    createdAt: member.createdAt
+  };
+}
+
+
+
+/* =========================
+   AUTHENTIFICATION
+========================= */
+
+const sessions = new Map();
+
+function createSession(member) {
+  const token = crypto.randomBytes(32).toString("hex");
+
+  sessions.set(token, {
+    memberId: member.id,
+    createdAt: Date.now()
+  });
+
+  return token;
+}
+
+function getAuthenticatedMember(req) {
+  const auth = req.headers.authorization || "";
+
+  if (!auth.startsWith("Bearer ")) {
+    return null;
+  }
+
+  const token = auth.slice(7).trim();
+  const session = sessions.get(token);
+
+  if (!session) {
+    return null;
+  }
+
+  const db = readDatabase();
+
+  return db.members.find(
+    (member) => member.id === session.memberId
+  ) || null;
+}
+
+function requireAuth(req, res, next) {
+  const member = getAuthenticatedMember(req);
+
+  if (!member) {
+    return res.status(401).json({
+      success: false,
+      message: "Connexion requise."
+    });
+  }
+
+  if (member.status !== "active") {
+    return res.status(403).json({
+      success: false,
+      message: "Compte suspendu."
+    });
+  }
+
+  req.member = member;
+  next();
+}
+
+function requireAdmin(req, res, next) {
+  const member = getAuthenticatedMember(req);
+
+  if (!member) {
+    return res.status(401).json({
+      success: false,
+      message: "Connexion administrateur requise."
+    });
+  }
+
+  if (member.status !== "active") {
+    return res.status(403).json({
+      success: false,
+      message: "Compte suspendu."
+    });
+  }
+
+  if (member.role !== "admin") {
+    return res.status(403).json({
+      success: false,
+      message: "Accès réservé à l'administrateur."
+    });
+  }
+
+  req.member = member;
+  next();
+}
+
+function findMember(id) {
+  const db = readDatabase();
+  return db.members.find((member) => member.id === id);
+}
+
+
+/* =========================
+   API STATUS
+========================= */
+
+app.get("/api/status", (req, res) => {
+  const db = readDatabase();
+
+  res.json({
+    success: true,
+    name: "JS LENGE TECH SERVICES",
+    status: "online",
+    members: db.members.length,
+    maxMembers: 500
+  });
+});
+
+
+/* =========================
+   INSCRIPTION
+========================= */
+
+app.post("/api/register", async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      password,
+      country
+    } = req.body;
+
+    if (!name || !email || !password || !country) {
+      return res.status(400).json({
+        success: false,
+        message: "Tous les champs obligatoires doivent être remplis."
+      });
+    }
+
+    if (String(password).length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Le mot de passe doit contenir au moins 6 caractères."
+      });
+    }
+
+    const db = readDatabase();
+
+    if (db.members.length >= 500) {
+      return res.status(400).json({
+        success: false,
+        message: "La limite de 500 membres a été atteinte."
+      });
+    }
+
+    const normalizedEmail = cleanEmail(email);
+
+    const existing = db.members.find(
+      (member) => member.email === normalizedEmail
+    );
+
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        message: "Cette adresse email est déjà utilisée."
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const member = {
+      id: generateId(),
+      name: String(name).trim(),
+      email: normalizedEmail,
+      passwordHash,
+      country: String(country).trim(),
+      skills: "",
+      bio: "",
+      ideas: "",
+      links: "",
+      photo: "",
+      role: "member",
+      status: "active",
+      createdAt: new Date().toISOString()
+    };
+
+    db.members.push(member);
+
+    db.notifications.push({
+      id: generateId(),
+      memberId: member.id,
+      title: "Bienvenue dans l'équipe",
+      message:
+        "Bienvenue chez JS LENGE TECH SERVICES. Ton compte membre est maintenant actif.",
+      read: false,
+      createdAt: new Date().toISOString()
+    });
+
+    writeDatabase(db);
+
+    res.status(201).json({
+      success: true,
+      message: "Inscription réussie. Tu es maintenant membre.",
+      member: publicMember(member)
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de l'inscription."
+    });
+  }
+});
+
+
+/* =========================
+   CONNEXION
+========================= */
+
+app.post("/api/login", async (req, res) => {
+  try {
+    const {
+      email,
+      password
+    } = req.body;
+
+    const normalizedEmail = cleanEmail(email);
+
+    /*
+      COMPTE ADMIN DE DÉVELOPPEMENT
+
+      À remplacer avant la mise en ligne réelle.
+    */
+
+    if (
+      normalizedEmail === "admin@jslenge.local" &&
+      password === "Admin1234"
+    ) {
+      return res.json({
+        success: true,
+        message: "Connexion administrateur réussie.",
+        member: {
+          id: "admin",
+          name: "Mr Justin Lenge",
+          email: "admin@jslenge.local",
+          country: "République démocratique du Congo",
+          role: "admin",
+          status: "active"
+        }
+      });
+    }
+
+    const db = readDatabase();
+
+    const member = db.members.find(
+      (item) => item.email === normalizedEmail
+    );
+
+    if (!member) {
+      return res.status(401).json({
+        success: false,
+        message: "Email ou mot de passe incorrect."
+      });
+    }
+
+    if (member.status !== "active") {
+      return res.status(403).json({
+        success: false,
+        message: "Ce compte est actuellement suspendu."
+      });
+    }
+
+    const passwordOk = await bcrypt.compare(
+      String(password || ""),
+      member.passwordHash
+    );
+
+    if (!passwordOk) {
+      return res.status(401).json({
+        success: false,
+        message: "Email ou mot de passe incorrect."
+      });
+    }
+
+    const token = createSession(member);
+
+    res.json({
+      success: true,
+      message: "Connexion réussie.",
+      token,
+      member: publicMember(member)
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la connexion."
+    });
+  }
+});
+
+
+/* =========================
+   MEMBRES
+========================= */
+
+app.get("/api/members", (req, res) => {
+  const db = readDatabase();
+
+  res.json({
+    success: true,
+    members: db.members
+      .filter((member) => member.status === "active")
+      .map(publicMember)
+  });
+});
+
+
+app.get("/api/members/:id", (req, res) => {
+  const member = findMember(req.params.id);
+
+  if (!member) {
+    return res.status(404).json({
+      success: false,
+      message: "Membre introuvable."
+    });
+  }
+
+  res.json({
+    success: true,
+    member: publicMember(member)
+  });
+});
+
+
+/* =========================
+   MODIFIER PROFIL
+========================= */
+
+app.put("/api/members/:id", (req, res) => {
+  const db = readDatabase();
+
+  const member = db.members.find(
+    (item) => item.id === req.params.id
+  );
+
+  if (!member) {
+    return res.status(404).json({
+      success: false,
+      message: "Membre introuvable."
+    });
+  }
+
+  const {
+    name,
+    country,
+    skills,
+    bio,
+    ideas,
+    links
+  } = req.body;
+
+  if (name !== undefined) member.name = String(name).trim();
+  if (country !== undefined) member.country = String(country).trim();
+  if (skills !== undefined) member.skills = String(skills);
+  if (bio !== undefined) member.bio = String(bio);
+  if (ideas !== undefined) member.ideas = String(ideas);
+  if (links !== undefined) member.links = String(links);
+
+  writeDatabase(db);
+
+  res.json({
+    success: true,
+    message: "Profil mis à jour.",
+    member: publicMember(member)
+  });
+});
+
+
+/* =========================
+   PHOTO DE PROFIL
+========================= */
+
+app.post(
+  "/api/members/:id/photo",
+  upload.single("photo"),
+  (req, res) => {
+    try {
+      const db = readDatabase();
+
+      const member = db.members.find(
+        (item) => item.id === req.params.id
+      );
+
+      if (!member) {
+        if (req.file) {
+          fs.unlinkSync(req.file.path);
+        }
+
+        return res.status(404).json({
+          success: false,
+          message: "Membre introuvable."
+        });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: "Aucune image envoyée."
+        });
+      }
+
+      if (member.photo) {
+        const oldFilename = path.basename(member.photo);
+        const oldPath = path.join(uploadsDir, oldFilename);
+
+        if (fs.existsSync(oldPath)) {
+          fs.unlinkSync(oldPath);
+        }
+      }
+
+      member.photo = "/uploads/" + req.file.filename;
+
+      writeDatabase(db);
+
+      res.json({
+        success: true,
+        message: "Photo de profil mise à jour.",
+        photo: member.photo
+      });
+
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        success: false,
+        message: "Erreur lors de l'envoi de la photo."
+      });
+    }
+  }
+);
+
+
+/* =========================
+   IDÉES
+========================= */
+
+app.post("/api/ideas", (req, res) => {
+  const {
+    memberId,
+    title,
+    description
+  } = req.body;
+
+  if (!memberId || !title || !description) {
+    return res.status(400).json({
+      success: false,
+      message: "Titre et description obligatoires."
+    });
+  }
+
+  const member = findMember(memberId);
+
+  if (!member) {
+    return res.status(404).json({
+      success: false,
+      message: "Membre introuvable."
+    });
+  }
+
+  const db = readDatabase();
+
+  const idea = {
+    id: generateId(),
+    memberId,
+    memberName: member.name,
+    title: String(title).trim(),
+    description: String(description).trim(),
+    createdAt: new Date().toISOString()
+  };
+
+  db.ideas.push(idea);
+
+  writeDatabase(db);
+
+  res.status(201).json({
+    success: true,
+    message: "Idée publiée.",
+    idea
+  });
+});
+
+
+app.get("/api/ideas", (req, res) => {
+  const db = readDatabase();
+
+  res.json({
+    success: true,
+    ideas: db.ideas
+  });
+});
+
+
+/* =========================
+   PROJETS
+========================= */
+
+app.post("/api/projects", (req, res) => {
+  const {
+    memberId,
+    title,
+    description
+  } = req.body;
+
+  if (!memberId || !title || !description) {
+    return res.status(400).json({
+      success: false,
+      message: "Titre et description obligatoires."
+    });
+  }
+
+  const member = findMember(memberId);
+
+  if (!member) {
+    return res.status(404).json({
+      success: false,
+      message: "Membre introuvable."
+    });
+  }
+
+  const db = readDatabase();
+
+  const project = {
+    id: generateId(),
+    memberId,
+    memberName: member.name,
+    title: String(title).trim(),
+    description: String(description).trim(),
+    status: "proposé",
+    createdAt: new Date().toISOString()
+  };
+
+  db.projects.push(project);
+
+  writeDatabase(db);
+
+  res.status(201).json({
+    success: true,
+    message: "Projet proposé.",
+    project
+  });
+});
+
+
+app.get("/api/projects", (req, res) => {
+  const db = readDatabase();
+
+  res.json({
+    success: true,
+    projects: db.projects
+  });
+});
+
+
+/* =========================
+   PUBLICATIONS
+========================= */
+
+app.post("/api/publications", (req, res) => {
+  const {
+    memberId,
+    title,
+    content
+  } = req.body;
+
+  if (!memberId || !content) {
+    return res.status(400).json({
+      success: false,
+      message: "Le contenu est obligatoire."
+    });
+  }
+
+  const member = findMember(memberId);
+
+  if (!member) {
+    return res.status(404).json({
+      success: false,
+      message: "Membre introuvable."
+    });
+  }
+
+  const db = readDatabase();
+
+  const publication = {
+    id: generateId(),
+    memberId,
+    memberName: member.name,
+    title: String(title || "").trim(),
+    content: String(content).trim(),
+    createdAt: new Date().toISOString()
+  };
+
+  db.publications.push(publication);
+
+  writeDatabase(db);
+
+  res.status(201).json({
+    success: true,
+    message: "Publication créée.",
+    publication
+  });
+});
+
+
+app.get("/api/publications", (req, res) => {
+  const db = readDatabase();
+
+  res.json({
+    success: true,
+    publications: db.publications
+  });
+});
+
+
+/* =========================
+   MESSAGES
+========================= */
+
+app.post("/api/messages", (req, res) => {
+  const {
+    senderId,
+    receiverId,
+    content
+  } = req.body;
+
+  if (!senderId || !receiverId || !content) {
+    return res.status(400).json({
+      success: false,
+      message: "Message incomplet."
+    });
+  }
+
+  const db = readDatabase();
+
+  const sender = db.members.find(
+    (member) => member.id === senderId
+  );
+
+  const receiver = db.members.find(
+    (member) => member.id === receiverId
+  );
+
+  if (!sender || !receiver) {
+    return res.status(404).json({
+      success: false,
+      message: "Membre introuvable."
+    });
+  }
+
+  const message = {
+    id: generateId(),
+    senderId,
+    senderName: sender.name,
+    receiverId,
+    content: String(content).trim(),
+    createdAt: new Date().toISOString()
+  };
+
+  db.messages.push(message);
+
+  db.notifications.push({
+    id: generateId(),
+    memberId: receiverId,
+    title: "Nouveau message",
+    message: `Tu as reçu un message de ${sender.name}.`,
+    read: false,
+    createdAt: new Date().toISOString()
+  });
+
+  writeDatabase(db);
+
+  res.status(201).json({
+    success: true,
+    message
+  });
+});
+
+
+app.get("/api/messages/:memberId", (req, res) => {
+  const db = readDatabase();
+
+  const memberId = req.params.memberId;
+
+  const messages = db.messages.filter(
+    (message) =>
+      message.senderId === memberId ||
+      message.receiverId === memberId
+  );
+
+  res.json({
+    success: true,
+    messages
+  });
+});
+
+
+/* =========================
+   NOTIFICATIONS
+========================= */
+
+app.get("/api/notifications/:memberId", (req, res) => {
+  const db = readDatabase();
+
+  const notifications = db.notifications.filter(
+    (notification) =>
+      notification.memberId === req.params.memberId
+  );
+
+  res.json({
+    success: true,
+    notifications
+  });
+});
+
+
+app.patch(
+  "/api/notifications/:memberId/:notificationId/read",
+  (req, res) => {
+    const db = readDatabase();
+
+    const notification = db.notifications.find(
+      (item) =>
+        item.id === req.params.notificationId &&
+        item.memberId === req.params.memberId
+    );
+
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        message: "Notification introuvable."
+      });
+    }
+
+    notification.read = true;
+
+    writeDatabase(db);
+
+    res.json({
+      success: true,
+      message: "Notification lue."
+    });
+  }
+);
+
+
+/* =========================
+   LIENS
+========================= */
+
+app.post("/api/links", (req, res) => {
+  const {
+    memberId,
+    title,
+    url
+  } = req.body;
+
+  if (!memberId || !title || !url) {
+    return res.status(400).json({
+      success: false,
+      message: "Titre et lien obligatoires."
+    });
+  }
+
+  const member = findMember(memberId);
+
+  if (!member) {
+    return res.status(404).json({
+      success: false,
+      message: "Membre introuvable."
+    });
+  }
+
+  const db = readDatabase();
+
+  const link = {
+    id: generateId(),
+    memberId,
+    memberName: member.name,
+    title: String(title).trim(),
+    url: String(url).trim(),
+    status: "pending",
+    createdAt: new Date().toISOString()
+  };
+
+  db.links.push(link);
+
+  writeDatabase(db);
+
+  res.status(201).json({
+    success: true,
+    message: "Lien envoyé pour validation.",
+    link
+  });
+});
+
+
+app.get("/api/links", (req, res) => {
+  const db = readDatabase();
+
+  res.json({
+    success: true,
+    links: db.links.filter(
+      (link) => link.status === "approved"
+    )
+  });
+});
+
+
+/* =========================
+   ADMIN — TABLEAU DE BORD
+========================= */
+
+app.get("/api/admin/dashboard", (req, res) => {
+  const db = readDatabase();
+
+  res.json({
+    success: true,
+
+    statistics: {
+      members: db.members.length,
+      activeMembers: db.members.filter(
+        (member) => member.status === "active"
+      ).length,
+      suspendedMembers: db.members.filter(
+        (member) => member.status === "suspended"
+      ).length,
+      ideas: db.ideas.length,
+      projects: db.projects.length,
+      publications: db.publications.length,
+      messages: db.messages.length,
+      linksPending: db.links.filter(
+        (link) => link.status === "pending"
+      ).length
+    },
+
+    members: db.members.map(publicMember),
+
+    ideas: db.ideas,
+
+    projects: db.projects,
+
+    publications: db.publications,
+
+    messages: db.messages,
+
+    links: db.links
+  });
+});
+
+
+/* =========================
+   ADMIN — SUPPRIMER MEMBRE
+========================= */
+
+app.delete("/api/admin/members/:id", (req, res) => {
+  const db = readDatabase();
+
+  const index = db.members.findIndex(
+    (member) => member.id === req.params.id
+  );
+
+  if (index === -1) {
+    return res.status(404).json({
+      success: false,
+      message: "Membre introuvable."
+    });
+  }
+
+  db.members.splice(index, 1);
+
+  db.notifications = db.notifications.filter(
+    (item) => item.memberId !== req.params.id
+  );
+
+  db.messages = db.messages.filter(
+    (item) =>
+      item.senderId !== req.params.id &&
+      item.receiverId !== req.params.id
+  );
+
+  writeDatabase(db);
+
+  res.json({
+    success: true,
+    message: "Membre supprimé."
+  });
+});
+
+
+/* =========================
+   ADMIN — STATUT MEMBRE
+========================= */
+
+app.patch("/api/admin/members/:id/status", (req, res) => {
+  const {
+    status
+  } = req.body;
+
+  if (!["active", "suspended"].includes(status)) {
+    return res.status(400).json({
+      success: false,
+      message: "Statut invalide."
+    });
+  }
+
+  const db = readDatabase();
+
+  const member = db.members.find(
+    (item) => item.id === req.params.id
+  );
+
+  if (!member) {
+    return res.status(404).json({
+      success: false,
+      message: "Membre introuvable."
+    });
+  }
+
+  member.status = status;
+
+  writeDatabase(db);
+
+  res.json({
+    success: true,
+    message:
+      status === "active"
+        ? "Membre activé."
+        : "Membre suspendu.",
+    member: publicMember(member)
+  });
+});
+
+
+/* =========================
+   ADMIN — LIEN
+========================= */
+
+app.patch("/api/admin/links/:id/status", (req, res) => {
+  const {
+    status
+  } = req.body;
+
+  if (!["approved", "rejected", "pending"].includes(status)) {
+    return res.status(400).json({
+      success: false,
+      message: "Statut invalide."
+    });
+  }
+
+  const db = readDatabase();
+
+  const link = db.links.find(
+    (item) => item.id === req.params.id
+  );
+
+  if (!link) {
+    return res.status(404).json({
+      success: false,
+      message: "Lien introuvable."
+    });
+  }
+
+  link.status = status;
+
+  writeDatabase(db);
+
+  res.json({
+    success: true,
+    message: "Statut du lien mis à jour.",
+    link
+  });
+});
+
+
+/* =========================
+   ERREURS MULTER
+========================= */
+
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    return res.status(400).json({
+      success: false,
+      message: "Erreur lors de l'envoi du fichier."
+    });
+  }
+
+  if (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Une erreur est survenue."
+    });
+  }
+
+  next();
+});
+
+
+/* =========================
+   PAGE PAR DÉFAUT
+========================= */
+
+app.use((req, res) => {
+  res.sendFile(
+    path.join(publicDir, "index.html")
+  );
+});
+
+
+/* =========================
+   DÉMARRAGE
+========================= */
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log("");
+  console.log("==========================================");
+  console.log("   JS LENGE TECH SERVICES");
+  console.log("==========================================");
+  console.log(`Serveur démarré sur le port ${PORT}`);
+  console.log(`http://localhost:${PORT}`);
+  console.log("");
+});

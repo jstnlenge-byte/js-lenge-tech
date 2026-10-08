@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Espace membre — JS LENGE TECH SERVICES">
+  <title>Espace membre — JS LENGE TECH</title>
+  <link rel="stylesheet" href="/style.css">
+
+  <style>
+    .member-page {
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .member-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 35px;
+      flex-wrap: wrap;
+    }
+
+    .member-header h1 {
+      margin: 0;
+    }
+
+    .member-card {
+      max-width: 900px;
+      margin: 0 auto 25px;
+    }
+
+    .profile-box {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 25px;
+      align-items: center;
+    }
+
+    .avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 45px;
+      background: rgba(255,255,255,0.08);
+      border: 2px solid rgba(255,255,255,0.15);
+    }
+
+    .info {
+      line-height: 1.8;
+    }
+
+    .info strong {
+      color: #fff;
+    }
+
+    .member-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .logout {
+      background: #dc2626 !important;
+    }
+
+    .welcome {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .welcome h2 {
+      margin-bottom: 8px;
+    }
+
+    .empty {
+      opacity: 0.7;
+      padding: 20px 0;
+    }
+
+    @media (max-width: 650px) {
+      .profile-box {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .avatar {
+        margin: auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="member-page">
+
+    <div class="container">
+
+      <div class="member-header">
+        <div>
+          <a href="/" class="logo">
+            JS LENGE <span>TECH</span>
+          </a>
+        </div>
+
+        <button id="logoutButton" class="btn logout">
+          🚪 Déconnexion
+        </button>
+      </div>
+
+      <div class="welcome">
+        <h1>👤 Espace membre</h1>
+        <p>Bienvenue dans l'équipe JS LENGE TECH SERVICES.</p>
+      </div>
+
+      <section class="card member-card">
+        <div class="profile-box">
+
+          <div class="avatar">
+            👤
+          </div>
+
+          <div class="info">
+            <h2 id="memberName">Chargement...</h2>
+
+            <p>
+              📧 <strong>Email :</strong>
+              <span id="memberEmail"></span>
+            </p>
+
+            <p>
+              🌍 <strong>Pays :</strong>
+              <span id="memberCountry"></span>
+            </p>
+
+            <p>
+              💻 <strong>Compétences :</strong>
+              <span id="memberSkills">Non renseignées</span>
+            </p>
+
+            <p>
+              📝 <strong>Présentation :</strong>
+              <span id="memberBio">Aucune présentation.</span>
+            </p>
+
+            <div class="member-actions">
+              <button id="refreshButton" class="btn btn-primary">
+                🔄 Actualiser
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <section class="grid">
+
+        <div class="card">
+          <h3>💡 Mes idées</h3>
+          <p id="ideas">Aucune idée pour le moment.</p>
+        </div>
+
+        <div class="card">
+          <h3>🚀 Mes projets</h3>
+          <p id="projects">Aucun projet pour le moment.</p>
+        </div>
+
+        <div class="card">
+          <h3>🔗 Mes liens</h3>
+          <p id="links">Aucun lien pour le moment.</p>
+        </div>
+
+        <div class="card">
+          <h3>🔔 Notifications</h3>
+          <p id="notifications">Aucune notification.</p>
+        </div>
+
+      </section>
+
+      <p id="message" style="text-align:center;margin-top:25px;"></p>
+
+    </div>
+
+  </main>
+
+<script>
+const token = localStorage.getItem("jsLengeToken");
+
+if (!token) {
+  window.location.href = "/login.html";
+}
+
+const savedMember = JSON.parse(
+  localStorage.getItem("jsLengeMember") || "null"
+);
+
+if (savedMember && savedMember.role === "admin") {
+  window.location.href = "/admin.html";
+}
+
+async function loadMember() {
+
+  const message = document.getElementById("message");
+
+  try {
+
+    if (!savedMember || !savedMember.id) {
+      throw new Error("Session membre introuvable.");
+    }
+
+    const response = await fetch(
+      "/api/members/" + encodeURIComponent(savedMember.id)
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || "Impossible de charger le profil.");
+    }
+
+    const member = data.member;
+
+    document.getElementById("memberName").textContent =
+      member.name || "";
+
+    document.getElementById("memberEmail").textContent =
+      member.email || "";
+
+    document.getElementById("memberCountry").textContent =
+      member.country || "Non renseigné";
+
+    document.getElementById("memberSkills").textContent =
+      member.skills || "Non renseignées";
+
+    document.getElementById("memberBio").textContent =
+      member.bio || "Aucune présentation.";
+
+    document.getElementById("ideas").textContent =
+      member.ideas || "Aucune idée pour le moment.";
+
+    document.getElementById("links").textContent =
+      member.links || "Aucun lien pour le moment.";
+
+    message.textContent = "";
+
+    loadNotifications(member.id);
+
+  } catch (error) {
+
+    message.textContent = "❌ " + error.message;
+    message.style.color = "#ef4444";
+
+  }
+}
+
+async function loadNotifications(memberId) {
+
+  try {
+
+    const response = await fetch(
+      "/api/notifications/" + encodeURIComponent(memberId),
+      {
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      }
+    );
+
+    const data = await response.json();
+
+    if (response.ok && data.success && data.notifications.length) {
+
+      document.getElementById("notifications").textContent =
+        data.notifications.map(n => n.title + " : " + n.message).join(" | ");
+
+    }
+
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+document.getElementById("refreshButton").addEventListener(
+  "click",
+  loadMember
+);
+
+document.getElementById("logoutButton").addEventListener(
+  "click",
+  () => {
+
+    localStorage.removeItem("jsLengeToken");
+    localStorage.removeItem("jsLengeMember");
+
+    window.location.href = "/login.html";
+
+  }
+);
+
+loadMember();
+</script>
+
+</body>
+</html>

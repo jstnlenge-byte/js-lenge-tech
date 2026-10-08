@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rejoindre l'équipe — JS LENGE TECH</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #fff;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 650px;
+      margin: auto;
+      padding: 30px 20px;
+    }
+
+    .logo {
+      text-align: center;
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .intro {
+      text-align: center;
+      color: #cbd5e1;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 18px;
+      padding: 25px;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      padding: 13px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.07);
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+    }
+
+    select option {
+      color: #000;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: #38bdf8;
+    }
+
+    .button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .button:disabled {
+      opacity: 0.6;
+    }
+
+    .login {
+      text-align: center;
+      margin-top: 20px;
+      color: #cbd5e1;
+    }
+
+    .login a {
+      color: #38bdf8;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    #message {
+      text-align: center;
+      margin-top: 18px;
+      font-weight: bold;
+      line-height: 1.5;
+    }
+
+    .required {
+      color: #f87171;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="logo">
+      JS LENGE TECH
+    </div>
+
+    <div class="intro">
+      <h1>🌍 Rejoindre notre équipe</h1>
+      <p>
+        Crée ton compte et participe à la communauté technologique
+        de JS LENGE TECH SERVICES.
+      </p>
+    </div>
+
+    <div class="card">
+
+      <form id="registerForm">
+
+        <div class="field">
+          <label for="name">
+            Nom complet <span class="required">*</span>
+          </label>
+
+          <input
+            id="name"
+            name="name"
+            type="text"
+            required
+            placeholder="Ex. Jean Dupont"
+          >
+        </div>
+
+        <div class="field">
+          <label for="email">
+            Adresse e-mail <span class="required">*</span>
+          </label>
+
+          <input
+            id="email"
+            name="email"
+            type="email"
+            required
+            placeholder="votre.email@exemple.com"
+          >
+        </div>
+
+        <div class="field">
+          <label for="password">
+            Mot de passe <span class="required">*</span>
+          </label>
+
+          <input
+            id="password"
+            name="password"
+            type="password"
+            required
+            minlength="6"
+            placeholder="Minimum 6 caractères"
+          >
+        </div>
+
+        <div class="field">
+          <label for="country">
+            Pays <span class="required">*</span>
+          </label>
+
+          <select id="country" name="country" required>
+
+            <option value="">-- Sélectionner votre pays --</option>
+
+            <option value="République démocratique du Congo">
+              🇨🇩 République démocratique du Congo
+            </option>
+
+            <option value="France">
+              🇫🇷 France
+            </option>
+
+            <option value="Canada">
+              🇨🇦 Canada
+            </option>
+
+            <option value="États-Unis">
+              🇺🇸 États-Unis
+            </option>
+
+            <option value="Chine">
+              🇨🇳 Chine
+            </option>
+
+            <option value="Zimbabwe">
+              🇿🇼 Zimbabwe
+            </option>
+
+            <option value="Zambie">
+              🇿🇲 Zambie
+            </option>
+
+            <option value="Rwanda">
+              🇷🇼 Rwanda
+            </option>
+
+            <option value="Burundi">
+              🇧🇮 Burundi
+            </option>
+
+            <option value="Autre">
+              🌍 Autre pays
+            </option>
+
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="skills">
+            Compétences
+          </label>
+
+          <input
+            id="skills"
+            name="skills"
+            type="text"
+            placeholder="Ex. JavaScript, IA, cybersécurité, design..."
+          >
+        </div>
+
+        <div class="field">
+          <label for="bio">
+            Présentation
+          </label>
+
+          <textarea
+            id="bio"
+            name="bio"
+            placeholder="Présente-toi en quelques phrases..."
+          ></textarea>
+        </div>
+
+        <div class="field">
+          <label for="ideas">
+            Tes idées
+          </label>
+
+          <textarea
+            id="ideas"
+            name="ideas"
+            placeholder="Quel projet technologique aimerais-tu développer ?"
+          ></textarea>
+        </div>
+
+        <button
+          id="registerButton"
+          class="button"
+          type="submit"
+        >
+          🚀 Créer mon compte
+        </button>
+
+        <div id="message"></div>
+
+      </form>
+
+      <div class="login">
+        Tu as déjà un compte ?
+        <a href="/login.html">Se connecter</a>
+      </div>
+
+    </div>
+
+  </div>
+
+<script>
+
+const form = document.getElementById("registerForm");
+const button = document.getElementById("registerButton");
+const message = document.getElementById("message");
+
+form.addEventListener("submit", async function(event) {
+
+  event.preventDefault();
+
+  button.disabled = true;
+  button.textContent = "Création du compte...";
+
+  message.textContent = "";
+  message.style.color = "";
+
+  const formData = {
+    name: document.getElementById("name").value.trim(),
+    email: document.getElementById("email").value.trim(),
+    password: document.getElementById("password").value,
+    country: document.getElementById("country").value,
+    skills: document.getElementById("skills").value.trim(),
+    bio: document.getElementById("bio").value.trim(),
+    ideas: document.getElementById("ideas").value.trim()
+  };
+
+  try {
+
+    const response = await fetch("/api/register", {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify(formData)
+
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message || "Impossible de créer le compte."
+      );
+    }
+
+    message.textContent =
+      "✅ Compte créé avec succès ! Redirection vers la connexion...";
+
+    message.style.color = "#22c55e";
+
+    form.reset();
+
+    setTimeout(function() {
+      window.location.href = "/login.html";
+    }, 1800);
+
+  } catch (error) {
+
+    message.textContent = "❌ " + error.message;
+    message.style.color = "#ef4444";
+
+  } finally {
+
+    button.disabled = false;
+    button.textContent = "🚀 Créer mon compte";
+
+  }
+
+});
+
+</script>
+
+</body>
+</html>

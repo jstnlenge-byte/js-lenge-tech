@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modifier mon profil — JS LENGE TECH</title>
+  <link rel="stylesheet" href="/style.css">
+
+  <style>
+    .profile-page {
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .profile-form {
+      max-width: 700px;
+      margin: 30px auto;
+    }
+
+    .profile-form label {
+      display: block;
+      margin: 18px 0 7px;
+      font-weight: bold;
+    }
+
+    .profile-form input,
+    .profile-form textarea,
+    .profile-form select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 13px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.06);
+      color: inherit;
+      font: inherit;
+    }
+
+    .profile-form textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 25px;
+    }
+
+    .back {
+      text-decoration: none;
+    }
+
+    #message {
+      text-align: center;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="profile-page">
+
+    <div class="container">
+
+      <div class="section-title">
+        <h1>👤 Modifier mon profil</h1>
+        <p>Présente-toi aux autres membres de JS LENGE TECH SERVICES.</p>
+      </div>
+
+      <form id="profileForm" class="card profile-form">
+
+        <label for="name">Nom complet</label>
+        <input id="name" type="text" required>
+
+        <label for="country">Pays</label>
+        <input id="country" type="text" required>
+
+        <label for="skills">Compétences</label>
+        <input
+          id="skills"
+          type="text"
+          placeholder="Ex. JavaScript, IA, design, cybersécurité..."
+        >
+
+        <label for="bio">Présentation</label>
+        <textarea
+          id="bio"
+          placeholder="Parle un peu de toi..."
+        ></textarea>
+
+        <label for="ideas">Mes idées</label>
+        <textarea
+          id="ideas"
+          placeholder="Présente tes idées ou domaines de projets..."
+        ></textarea>
+
+        <label for="links">Mes liens</label>
+        <textarea
+          id="links"
+          placeholder="WhatsApp, GitHub, TikTok, site web..."
+        ></textarea>
+
+        <div class="actions">
+
+          <button
+            id="saveButton"
+            type="submit"
+            class="btn btn-primary"
+          >
+            💾 Enregistrer
+          </button>
+
+          <a
+            href="/espace-membre.html"
+            class="btn btn-secondary back"
+          >
+            ← Retour
+          </a>
+
+        </div>
+
+        <p id="message"></p>
+
+      </form>
+
+    </div>
+
+  </main>
+
+<script>
+const token = localStorage.getItem("jsLengeToken");
+const savedMember = JSON.parse(
+  localStorage.getItem("jsLengeMember") || "null"
+);
+
+if (!token || !savedMember || !savedMember.id) {
+  window.location.href = "/login.html";
+}
+
+
+const form = document.getElementById("profileForm");
+const message = document.getElementById("message");
+
+async function loadProfile() {
+
+  try {
+
+    const response = await fetch(
+      "/api/members/" + encodeURIComponent(savedMember.id),
+      {
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || "Impossible de charger le profil.");
+    }
+
+    const member = data.member;
+
+    document.getElementById("name").value =
+      member.name || "";
+
+    document.getElementById("country").value =
+      member.country || "";
+
+    document.getElementById("skills").value =
+      member.skills || "";
+
+    document.getElementById("bio").value =
+      member.bio || "";
+
+    document.getElementById("ideas").value =
+      member.ideas || "";
+
+    document.getElementById("links").value =
+      member.links || "";
+
+  } catch (error) {
+
+    message.textContent = "❌ " + error.message;
+    message.style.color = "#ef4444";
+
+  }
+}
+
+form.addEventListener("submit", async (event) => {
+
+  event.preventDefault();
+
+  const saveButton = document.getElementById("saveButton");
+
+  saveButton.disabled = true;
+  saveButton.textContent = "Enregistrement...";
+
+  try {
+
+    const response = await fetch(
+      "/api/members/" + encodeURIComponent(savedMember.id),
+      {
+        method: "PUT",
+
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+
+        body: JSON.stringify({
+          name: document.getElementById("name").value,
+          country: document.getElementById("country").value,
+          skills: document.getElementById("skills").value,
+          bio: document.getElementById("bio").value,
+          ideas: document.getElementById("ideas").value,
+          links: document.getElementById("links").value
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || "Échec de la modification.");
+    }
+
+    localStorage.setItem(
+      "jsLengeMember",
+      JSON.stringify(data.member)
+    );
+
+    message.textContent = "✅ Profil mis à jour avec succès.";
+    message.style.color = "#22c55e";
+
+  } catch (error) {
+
+    message.textContent = "❌ " + error.message;
+    message.style.color = "#ef4444";
+
+  } finally {
+
+    saveButton.disabled = false;
+    saveButton.textContent = "💾 Enregistrer";
+
+  }
+});
+
+loadProfile();
+</script>
+
+</body>
+</html>

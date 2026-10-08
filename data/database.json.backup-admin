@@ -1,0 +1,36 @@
+{
+  "members": [
+    {
+      "id": "11232683-0585-456a-972a-33bca20eb6ab",
+      "name": "Justin Lenge",
+      "email": "jstnlenge@gmail.com",
+      "passwordHash": "$2b$10$GIM7CNgReM0JU7blw5rOF.EFwyG7uxfUW2dqgFSl9KhwT4iyDfGOq",
+      "country": "Congo Kinshasa",
+      "skills": "",
+      "bio": "",
+      "ideas": "",
+      "links": "",
+      "photo": "",
+      "role": "admin",
+      "status": "active",
+      "createdAt": "2026-10-08T10:12:23.421Z"
+    }
+  ],
+  "ideas": [],
+  "projects": [],
+  "publications": [],
+  "messages": [],
+  "notifications": [
+    {
+      "id": "16442cb8-b43d-47d2-8a26-f8de58e9f449",
+      "memberId": "11232683-0585-456a-972a-33bca20eb6ab",
+      "title": "Bienvenue dans l'équipe",
+      "message": "Bienvenue chez JS LENGE TECH SERVICES. Ton compte membre est maintenant actif.",
+      "read": false,
+      "createdAt": "2026-10-08T10:12:23.421Z"
+    }
+  ],
+  "links": [],
+  "photos": [],
+  "announcements": []
+}

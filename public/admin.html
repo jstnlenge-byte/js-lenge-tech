@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administration - JS LENGE TECH SERVICES</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #0a0f1d;
+      color: #fff;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    nav {
+      padding: 15px 20px;
+      background: rgba(10,15,29,.97);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      color: #00a8ff;
+      font-weight: 800;
+      font-size: 1.1rem;
+    }
+
+    .admin-name {
+      color: #94a3b8;
+      font-size: .85rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 25px 15px 50px;
+    }
+
+    h1 {
+      margin: 5px 0;
+      font-size: 1.7rem;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      margin-bottom: 25px;
+    }
+
+    .message {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .error {
+      background: rgba(239,68,68,.12);
+      color: #f87171;
+      border: 1px solid rgba(239,68,68,.3);
+    }
+
+    .success {
+      background: rgba(34,197,94,.12);
+      color: #4ade80;
+      border: 1px solid rgba(34,197,94,.3);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: rgba(15,23,42,.8);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .card-title {
+      color: #94a3b8;
+      font-size: .8rem;
+      margin-bottom: 8px;
+    }
+
+    .number {
+      font-size: 1.8rem;
+      font-weight: 800;
+    }
+
+    .section {
+      margin-top: 25px;
+    }
+
+    .section h2 {
+      font-size: 1.15rem;
+      margin-bottom: 12px;
+    }
+
+    .member {
+      background: rgba(15,23,42,.8);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .member-info strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .member-info small {
+      color: #94a3b8;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-size: .7rem;
+      margin-top: 7px;
+    }
+
+    .active {
+      background: rgba(34,197,94,.15);
+      color: #4ade80;
+    }
+
+    .suspended {
+      background: rgba(239,68,68,.15);
+      color: #f87171;
+    }
+
+    .admin {
+      background: rgba(0,168,255,.15);
+      color: #38bdf8;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 0;
+      border-radius: 7px;
+      padding: 9px 12px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .suspend-btn {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .activate-btn {
+      background: #22c55e;
+      color: #000;
+    }
+
+    .delete-btn {
+      background: #7f1d1d;
+      color: #fff;
+    }
+
+    .logout-btn {
+      background: #334155;
+      color: #fff;
+    }
+
+    .empty {
+      color: #94a3b8;
+      padding: 15px;
+      background: rgba(15,23,42,.5);
+      border-radius: 8px;
+    }
+
+    @media (max-width: 600px) {
+      nav {
+        align-items: flex-start;
+      }
+
+      .member {
+        align-items: flex-start;
+      }
+
+      .actions {
+        width: 100%;
+      }
+
+      .actions button {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<nav>
+  <div class="logo">JS LENGE TECH</div>
+
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span id="adminName" class="admin-name">Administrateur</span>
+    <button class="logout-btn" onclick="logout()">Déconnexion</button>
+  </div>
+</nav>
+
+<div class="container">
+
+  <h1>Tableau de bord</h1>
+  <p class="subtitle">
+    Administration de JS LENGE TECH SERVICES
+  </p>
+
+  <div id="message" class="message"></div>
+
+  <div class="stats">
+
+    <div class="card">
+      <div class="card-title">MEMBRES</div>
+      <div id="membersCount" class="number">—</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">ACTIFS</div>
+      <div id="activeMembers" class="number">—</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">SUSPENDUS</div>
+      <div id="suspendedMembers" class="number">—</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">IDÉES</div>
+      <div id="ideasCount" class="number">—</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">PROJETS</div>
+      <div id="projectsCount" class="number">—</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">PUBLICATIONS</div>
+      <div id="publicationsCount" class="number">—</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">MESSAGES</div>
+      <div id="messagesCount" class="number">—</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">LIENS EN ATTENTE</div>
+      <div id="linksPending" class="number">—</div>
+    </div>
+
+  </div>
+
+  <div class="section">
+    <h2>👥 Membres de l'équipe</h2>
+    <div id="membersList">
+      <div class="empty">Chargement des membres...</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+
+const token = localStorage.getItem("jsLengeToken");
+const savedMember = localStorage.getItem("jsLengeMember");
+
+if (!token) {
+  window.location.href = "/login.html";
+}
+
+if (savedMember) {
+  try {
+    const member = JSON.parse(savedMember);
+
+    if (member.role !== "admin") {
+      window.location.href = "/index.html";
+    }
+
+    document.getElementById("adminName").textContent =
+      member.name || "Administrateur";
+
+  } catch (error) {
+    localStorage.removeItem("jsLengeMember");
+    window.location.href = "/login.html";
+  }
+}
+
+function showMessage(text, type = "error") {
+  const message = document.getElementById("message");
+
+  message.textContent = text;
+  message.className = "message " + type;
+  message.style.display = "block";
+}
+
+async function loadDashboard() {
+
+  try {
+
+    const response = await fetch("/api/admin/dashboard", {
+      method: "GET",
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem("jsLengeToken");
+        localStorage.removeItem("jsLengeMember");
+        window.location.href = "/login.html";
+        return;
+      }
+
+      throw new Error(
+        data.message || "Impossible de charger le tableau de bord."
+      );
+    }
+
+    document.getElementById("membersCount").textContent =
+      data.statistics.members;
+
+    document.getElementById("activeMembers").textContent =
+      data.statistics.activeMembers;
+
+    document.getElementById("suspendedMembers").textContent =
+      data.statistics.suspendedMembers;
+
+    document.getElementById("ideasCount").textContent =
+      data.statistics.ideas;
+
+    document.getElementById("projectsCount").textContent =
+      data.statistics.projects;
+
+    document.getElementById("publicationsCount").textContent =
+      data.statistics.publications;
+
+    document.getElementById("messagesCount").textContent =
+      data.statistics.messages;
+
+    document.getElementById("linksPending").textContent =
+      data.statistics.linksPending;
+
+    renderMembers(data.members || []);
+
+  } catch (error) {
+
+    showMessage("❌ " + error.message);
+  }
+}
+
+function renderMembers(members) {
+
+  const container = document.getElementById("membersList");
+
+  if (!members.length) {
+    container.innerHTML =
+      '<div class="empty">Aucun membre pour le moment.</div>';
+    return;
+  }
+
+  container.innerHTML = "";
+
+  members.forEach(member => {
+
+    const item = document.createElement("div");
+    item.className = "member";
+
+    const statusClass =
+      member.status === "active" ? "active" : "suspended";
+
+    const statusText =
+      member.status === "active" ? "Actif" : "Suspendu";
+
+    const roleBadge =
+      member.role === "admin"
+        ? '<span class="badge admin">ADMIN</span>'
+        : "";
+
+    let actions = "";
+
+    if (member.role !== "admin") {
+
+      if (member.status === "active") {
+
+        actions += `
+          <button
+            class="suspend-btn"
+            onclick="changeStatus('${member.id}', 'suspended')">
+            Suspendre
+          </button>
+        `;
+
+      } else {
+
+        actions += `
+          <button
+            class="activate-btn"
+            onclick="changeStatus('${member.id}', 'active')">
+            Activer
+          </button>
+        `;
+
+      }
+
+      actions += `
+        <button
+          class="delete-btn"
+          onclick="deleteMember('${member.id}', '${escapeHtml(member.name)}')">
+          Supprimer
+        </button>
+      `;
+    }
+
+    item.innerHTML = `
+      <div class="member-info">
+        <strong>${escapeHtml(member.name)}</strong>
+        <small>${escapeHtml(member.email)}</small><br>
+        <small>${escapeHtml(member.country || "Pays non renseigné")}</small><br>
+        <span class="badge ${statusClass}">${statusText}</span>
+        ${roleBadge}
+      </div>
+
+      <div class="actions">
+        ${actions}
+      </div>
+    `;
+
+    container.appendChild(item);
+  });
+}
+
+function escapeHtml(value) {
+
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+async function changeStatus(memberId, status) {
+
+  try {
+
+    const response = await fetch(
+      "/api/admin/members/" + memberId + "/status",
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ status })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message || "Modification impossible."
+      );
+    }
+
+    showMessage("✅ Statut du membre mis à jour.", "success");
+
+    await loadDashboard();
+
+  } catch (error) {
+
+    showMessage("❌ " + error.message);
+  }
+}
+
+async function deleteMember(memberId, memberName) {
+
+  const confirmed = confirm(
+    "Voulez-vous vraiment supprimer le membre " +
+    memberName +
+    " ?"
+  );
+
+  if (!confirmed) return;
+
+  try {
+
+    const response = await fetch(
+      "/api/admin/members/" + memberId,
+      {
+        method: "DELETE",
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message || "Suppression impossible."
+      );
+    }
+
+    showMessage("✅ Membre supprimé.", "success");
+
+    await loadDashboard();
+
+  } catch (error) {
+
+    showMessage("❌ " + error.message);
+  }
+}
+
+function logout() {
+
+  localStorage.removeItem("jsLengeToken");
+  localStorage.removeItem("jsLengeMember");
+
+  window.location.href = "/login.html";
+}
+
+loadDashboard();
+
+</script>
+
+</body>
+</html>

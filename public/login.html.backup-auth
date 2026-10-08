@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion - JS LENGE TECH SERVICES</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #0a0f1d; color: #ffffff; font-family: system-ui, -apple-system, sans-serif;">
+
+  <!-- NAVBAR -->
+  <nav style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: rgba(10, 15, 29, 0.95); border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+    <a href="/index.html" style="font-weight: 800; font-size: 1.1rem; color: #00a8ff; text-decoration: none;">JS LENGE TECH</a>
+    <a href="/register.html" style="padding: 6px 12px; background: #00a8ff; color: #000; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 700;">Rejoindre</a>
+  </nav>
+
+  <!-- FORM CONTAINER -->
+  <div style="max-width: 400px; margin: 60px auto; padding: 25px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;">
+    
+    <div style="text-align: center; margin-bottom: 25px;">
+      <h1 style="font-size: 1.5rem; color: #ffffff; margin-bottom: 8px;">Espace Membre</h1>
+      <p style="color: #94a3b8; font-size: 0.88rem; margin: 0;">Connectez-vous pour accéder à l'équipe.</p>
+    </div>
+
+    <form action="/api/login" method="POST" style="display: flex; flex-direction: column; gap: 15px;">
+      
+      <div>
+        <label style="display: block; color: #cbd5e1; font-size: 0.85rem; margin-bottom: 5px;">Adresse Email</label>
+        <input type="email" name="email" required placeholder="votre.email@exemple.com" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; box-sizing: border-box;">
+      </div>
+
+      <div>
+        <label style="display: block; color: #cbd5e1; font-size: 0.85rem; margin-bottom: 5px;">Mot de passe</label>
+        <input type="password" name="password" required placeholder="••••••••" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; box-sizing: border-box;">
+      </div>
+
+      <button type="submit" style="margin-top: 10px; padding: 12px; background: #00a8ff; color: #000; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem;">
+        Se connecter
+      </button>
+
+    </form>
+
+    <div style="text-align: center; margin-top: 20px; font-size: 0.85rem; color: #94a3b8;">
+      Pas encore membre ? <a href="/register.html" style="color: #00a8ff; text-decoration: none; font-weight: 600;">Postuler ici</a>
+    </div>
+
+  </div>
+
+</body>
+</html>

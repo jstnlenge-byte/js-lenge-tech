@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="JS LENGE TECH SERVICES — Une équipe technologique internationale construisant ensemble les idées de demain.">
+  <title>JS LENGE TECH SERVICES</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+  <!-- =========================
+       NAVIGATION
+  ========================== -->
+  <header class="navbar">
+    <a href="/" class="logo">
+      JS LENGE <span>TECH</span>
+    </a>
+
+    <nav class="nav-links">
+      <a href="#mission">Mission</a>
+      <a href="#vision">Vision</a>
+      <a href="#technologies">Technologies</a>
+      <a href="#equipe">Équipe</a>
+      <a href="/login.html">Se connecter</a>
+    </nav>
+  </header>
+
+
+  <!-- =========================
+       HERO
+  ========================== -->
+  <main>
+
+    <section class="hero">
+      <div class="container hero-content">
+
+        <div class="badge">
+          🌍 Une équipe technologique internationale
+        </div>
+
+        <div class="badge">
+        </div>
+
+        <h1>
+          Créons les idées <span>de demain</span>
+        </h1>
+
+        <p>
+          Bienvenue chez <strong>JS LENGE TECH SERVICES</strong>.
+          Nous réunissons des personnes passionnées par l'informatique,
+          l'intelligence artificielle, les applications, le web et les
+          nouvelles technologies afin de construire ensemble des projets utiles.
+        </p>
+
+        <div class="btns">
+          <a href="/register.html" class="btn btn-primary">
+            Rejoindre l'équipe
+          </a>
+
+          <a href="/login.html" class="btn btn-secondary">
+            Se connecter
+          </a>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- =========================
+         MISSION
+    ========================== -->
+    <section id="mission">
+      <div class="container">
+
+        <div class="section-title">
+          <h2>Notre mission</h2>
+          <p>
+            Construire ensemble, apprendre ensemble et avancer ensemble.
+          </p>
+        </div>
+
+        <div class="grid">
+
+          <div class="card">
+            <h3>💡 Les idées</h3>
+            <p>
+              Chaque membre peut proposer ses idées et participer
+              à la réflexion sur les futurs projets de l'équipe.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>🤝 La collaboration</h3>
+            <p>
+              Nous voulons réunir des talents de différents pays
+              afin de travailler ensemble sur des projets technologiques.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>🚀 Les projets</h3>
+            <p>
+              Notre objectif est de transformer les bonnes idées
+              en applications, services et solutions technologiques.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =========================
+         VISION
+    ========================== -->
+    <section id="vision">
+      <div class="container">
+
+        <div class="section-title">
+          <h2>Notre vision</h2>
+          <p>
+            Une communauté technologique construite par ses membres.
+          </p>
+        </div>
+
+        <div class="grid">
+
+          <div class="card">
+            <h3>01 — Proposer</h3>
+            <p>
+              Chaque membre peut partager une idée ou proposer
+              un nouveau projet.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>02 — Collaborer</h3>
+            <p>
+              Les membres peuvent discuter, partager leurs compétences
+              et travailler ensemble.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>03 — Construire</h3>
+            <p>
+              Les meilleures idées peuvent devenir de véritables
+              produits et services.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =========================
+         TECHNOLOGIES
+    ========================== -->
+    <section id="technologies">
+      <div class="container">
+
+        <div class="section-title">
+          <h2>Technologies</h2>
+          <p>
+            Les domaines que notre équipe pourra explorer.
+          </p>
+        </div>
+
+        <div class="grid">
+
+          <div class="card">
+            <h3>🤖 Intelligence artificielle</h3>
+            <p>
+              Applications IA, assistants intelligents et automatisation.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>💻 Développement</h3>
+            <p>
+              Applications web, mobiles, logiciels et plateformes.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>🔐 Cybersécurité</h3>
+            <p>
+              Sécurité informatique, protection des données
+              et bonnes pratiques.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>🌐 Internet</h3>
+            <p>
+              Services en ligne, plateformes communautaires
+              et solutions web.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>🤖 Robotique</h3>
+            <p>
+              Exploration de la robotique et des systèmes intelligents.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>⚙️ Innovation</h3>
+            <p>
+              Recherche de nouvelles idées et création de solutions.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =========================
+         ÉQUIPE
+    ========================== -->
+    <section id="equipe">
+      <div class="container">
+
+        <div class="stat">
+          <strong>500</strong>
+          <h2>Membres maximum</h2>
+
+          <p>
+            Une équipe limitée à 500 membres afin de favoriser
+            une collaboration efficace.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- =========================
+         APPEL À REJOINDRE
+    ========================== -->
+    <section>
+      <div class="container">
+
+        <div class="section-title">
+          <h2>Construisons la technologie ensemble.</h2>
+
+          <p>
+            Tu as une compétence, une idée ou simplement l'envie
+            d'apprendre et de participer ?
+          </p>
+
+          <div class="btns" style="margin-top:25px;">
+            <a href="/register.html" class="btn btn-primary">
+              Rejoindre JS LENGE TECH SERVICES
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- =========================
+       FOOTER
+  ========================== -->
+  <footer>
+    <div class="container">
+
+      <p>
+        © 2026 JS LENGE TECH SERVICES
+      </p>
+
+      <p style="margin-top:8px;">
+        Technologie • Collaboration • Innovation
+      </p>
+
+      <p style="margin-top:8px;">
+      </p>
+
+      <p style="margin-top:8px;">
+        📱 +243 998505243
+      </p>
+
+      <p style="margin-top:12px;">
+        <a
+          href="https://wa.me/243998505243"
+          class="btn btn-primary"
+          target="_blank"
+        >
+          💬 Nous contacter sur WhatsApp
+        </a>
+      </p>
+
+    </div>
+  </footer>
+
+</body>
+</html>
