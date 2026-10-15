@@ -794,6 +794,22 @@
     meta.className = "community-meta";
     meta.textContent = "Par " + (item.member_name || "Membre") + date;
     card.appendChild(meta);
+
+    if (item.id !== undefined && item.id !== null) {
+      const detailsLink = document.createElement("a");
+      detailsLink.textContent = "👁️ Voir les détails";
+      detailsLink.href = "/detail-communaute.html?type=" +
+        encodeURIComponent(type) + "&id=" + encodeURIComponent(String(item.id));
+      detailsLink.style.display = "inline-block";
+      detailsLink.style.marginTop = "12px";
+      detailsLink.style.padding = "10px 14px";
+      detailsLink.style.borderRadius = "8px";
+      detailsLink.style.background = "#155eef";
+      detailsLink.style.color = "#ffffff";
+      detailsLink.style.textDecoration = "none";
+      card.appendChild(detailsLink);
+    }
+
     feed.appendChild(card);
   }
 

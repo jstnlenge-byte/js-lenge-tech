@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Détails — JS LENGE TECH SERVICES</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    body { margin: 0; padding: 20px; }
+    .detail-container {
+      max-width: 800px;
+      margin: 35px auto;
+      padding: 24px;
+      border-radius: 16px;
+      background: white;
+      color: #172033;
+      box-shadow: 0 5px 25px rgba(0,0,0,.12);
+    }
+    .detail-container h1 { overflow-wrap: anywhere; }
+    .detail-description {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      line-height: 1.8;
+    }
+    .detail-meta { color: #64748b; margin: 15px 0; }
+    .detail-button {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 18px;
+      border-radius: 8px;
+      background: #155eef;
+      color: white;
+      text-decoration: none;
+    }
+    #detailStatus { color: #b42318; }
+  </style>
+</head>
+<body>
+  <main class="detail-container">
+    <a href="/espace-membre.html">← Retour à la communauté</a>
+    <p id="detailStatus">Chargement des détails...</p>
+    <h1 id="detailTitle"></h1>
+    <div id="detailMeta" class="detail-meta"></div>
+    <p id="detailDescription" class="detail-description"></p>
+    <a class="detail-button" href="/espace-membre.html">Retour à l'espace membre</a>
+  </main>
+
+  <script>
+    (async function () {
+      const status = document.getElementById("detailStatus");
+      const params = new URLSearchParams(window.location.search);
+      const type = params.get("type");
+      const id = params.get("id");
+
+      const config = {
+        idea: { endpoint: "/api/ideas", key: "ideas" },
+        project: { endpoint: "/api/projects", key: "projects" },
+        publication: { endpoint: "/api/publications", key: "publications" }
+      };
+
+      if (!config[type] || !id) {
+        status.textContent = "Le lien vers ce contenu est incomplet.";
+        return;
+      }
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        status.textContent = "Connecte-toi pour consulter ce contenu.";
+        return;
+      }
+
+      try {
+        const response = await fetch(config[type].endpoint, {
+          headers: { Authorization: "Bearer " + token }
+        });
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Impossible de charger le contenu.");
+        }
+
+        const items = Array.isArray(data[config[type].key])
+          ? data[config[type].key] : [];
+
+        const item = items.find(entry => String(entry.id) === String(id));
+
+        if (!item) {
+          status.textContent = "Contenu introuvable ou inaccessible.";
+          return;
+        }
+
+        document.getElementById("detailTitle").textContent =
+          item.title || "Sans titre";
+        document.getElementById("detailDescription").textContent =
+          type === "publication"
+            ? (item.content || "")
+            : (item.description || "");
+
+        let meta = "Publié par " + (item.member_name || "Membre");
+        if (item.created_at) {
+          const date = new Date(item.created_at);
+          if (!Number.isNaN(date.getTime())) {
+            meta += " • " + date.toLocaleString("fr-FR");
+          }
+        }
+        if (type === "project" && item.status) {
+          meta += " • Statut : " + item.status;
+        }
+
+        document.getElementById("detailMeta").textContent = meta;
+        status.textContent = "";
+      } catch (error) {
+        status.textContent = error.message || "Erreur de connexion.";
+      }
+    })();
+  </script>
+</body>
+</html>
