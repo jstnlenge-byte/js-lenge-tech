@@ -200,6 +200,65 @@
       margin-top: 40px;
     }
 
+
+    .community-form {
+      display: grid;
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .community-form input,
+    .community-form textarea,
+    .community-form select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d0d5dd;
+      border-radius: 8px;
+      font: inherit;
+      background: white;
+    }
+
+    .community-form textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .community-feed {
+      display: grid;
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .community-post {
+      padding: 15px;
+      border: 1px solid #eaecf0;
+      border-radius: 12px;
+      background: #f8fafc;
+      overflow-wrap: anywhere;
+    }
+
+    .community-post h3 {
+      margin-bottom: 8px;
+    }
+
+    .community-post p {
+      white-space: pre-wrap;
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+
+    .community-meta {
+      color: #667085;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    .community-status {
+      margin-top: 10px;
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
+
     @media (max-width: 600px) {
       .container {
         width: 92%;
@@ -340,6 +399,69 @@
       <p>Collabore avec les membres de JS LENGE TECH.</p>
     </div>
 
+  </section>
+
+
+  <section class="card">
+    <h2>💡 Partager une idée</h2>
+    <p>Présente ton idée à la communauté internationale.</p>
+
+    <form id="ideaForm" class="community-form">
+      <input id="ideaTitle" maxlength="150"
+        placeholder="Titre de ton idée" required>
+      <textarea id="ideaDescription" maxlength="5000"
+        placeholder="Explique ton idée..." required></textarea>
+      <button class="btn btn-primary" type="submit">
+        📤 Publier mon idée
+      </button>
+    </form>
+
+    <p id="ideaStatus" class="community-status" role="status"></p>
+    <h3 style="margin-top:22px;">🌍 Idées de la communauté</h3>
+    <div id="ideasFeed" class="community-feed">Chargement...</div>
+  </section>
+
+  <section class="card">
+    <h2>🚀 Présenter un projet</h2>
+    <p>Partage un projet informatique, IA ou robotique.</p>
+
+    <form id="projectForm" class="community-form">
+      <input id="projectTitle" maxlength="150"
+        placeholder="Nom du projet" required>
+      <textarea id="projectDescription" maxlength="5000"
+        placeholder="Décris ton projet..." required></textarea>
+      <select id="projectStatus">
+        <option value="proposé">Projet proposé</option>
+        <option value="en cours">Projet en cours</option>
+        <option value="terminé">Projet terminé</option>
+      </select>
+      <button class="btn btn-primary" type="submit">
+        🚀 Publier mon projet
+      </button>
+    </form>
+
+    <p id="projectMessage" class="community-status" role="status"></p>
+    <h3 style="margin-top:22px;">🌍 Projets des membres</h3>
+    <div id="projectsFeed" class="community-feed">Chargement...</div>
+  </section>
+
+  <section class="card">
+    <h2>📢 Publications de la communauté</h2>
+    <p>Partage une annonce ou une information utile.</p>
+
+    <form id="publicationForm" class="community-form">
+      <input id="publicationTitle" maxlength="150"
+        placeholder="Titre (facultatif)">
+      <textarea id="publicationContent" maxlength="5000"
+        placeholder="Écris ta publication..." required></textarea>
+      <button class="btn btn-primary" type="submit">
+        📢 Publier
+      </button>
+    </form>
+
+    <p id="publicationMessage" class="community-status" role="status"></p>
+    <h3 style="margin-top:22px;">📰 Dernières publications</h3>
+    <div id="publicationsFeed" class="community-feed">Chargement...</div>
   </section>
 
   <section class="card">
@@ -622,6 +744,196 @@
     uploadPhoto
   );
 
+
+  function communityHeaders() {
+    return {
+      "Authorization": "Bearer " + token,
+      "Content-Type": "application/json"
+    };
+  }
+
+  function communityStatus(id, message, error) {
+    const box = document.getElementById(id);
+    box.textContent = message;
+    box.style.color = error ? "#dc2626" : "#15803d";
+  }
+
+  function addCommunityCard(feed, item, type) {
+    const card = document.createElement("article");
+    card.className = "community-post";
+
+    const title = document.createElement("h3");
+    const body = document.createElement("p");
+    const meta = document.createElement("div");
+
+    if (type === "publication") {
+      title.textContent = item.title || "Publication";
+      body.textContent = item.content || "";
+    } else {
+      title.textContent = item.title || "Sans titre";
+      body.textContent = item.description || "";
+    }
+
+    card.appendChild(title);
+    card.appendChild(body);
+
+    if (type === "project" && item.status) {
+      const state = document.createElement("p");
+      state.textContent = "Statut : " + item.status;
+      card.appendChild(state);
+    }
+
+    let date = "";
+    if (item.created_at) {
+      const parsed = new Date(item.created_at);
+      if (!Number.isNaN(parsed.getTime())) {
+        date = " • " + parsed.toLocaleString("fr-FR");
+      }
+    }
+
+    meta.className = "community-meta";
+    meta.textContent = "Par " + (item.member_name || "Membre") + date;
+    card.appendChild(meta);
+    feed.appendChild(card);
+  }
+
+  async function loadCommunityFeed(endpoint, feedId, key, type) {
+    const feed = document.getElementById(feedId);
+    feed.textContent = "Chargement...";
+
+    try {
+      const response = await fetch(endpoint, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Chargement impossible.");
+      }
+
+      const items = Array.isArray(data[key]) ? data[key] : [];
+      feed.replaceChildren();
+
+      if (items.length === 0) {
+        feed.textContent = "Aucune publication pour le moment.";
+        return;
+      }
+
+      items.forEach(item => addCommunityCard(feed, item, type));
+    } catch (error) {
+      feed.textContent = error.message || "Erreur de connexion.";
+    }
+  }
+
+  function loadCommunity() {
+    loadCommunityFeed("/api/ideas", "ideasFeed", "ideas", "idea");
+    loadCommunityFeed("/api/projects", "projectsFeed", "projects", "project");
+    loadCommunityFeed(
+      "/api/publications",
+      "publicationsFeed",
+      "publications",
+      "publication"
+    );
+  }
+
+  document.getElementById("ideaForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const button = form.querySelector('button[type="submit"]');
+    button.disabled = true;
+
+    try {
+      const response = await fetch("/api/ideas", {
+        method: "POST",
+        headers: communityHeaders(),
+        body: JSON.stringify({
+          title: document.getElementById("ideaTitle").value.trim(),
+          description: document.getElementById("ideaDescription").value.trim()
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Publication impossible.");
+      }
+
+      form.reset();
+      communityStatus("ideaStatus", "✅ Ton idée a été publiée !", false);
+      await loadCommunityFeed("/api/ideas", "ideasFeed", "ideas", "idea");
+    } catch (error) {
+      communityStatus("ideaStatus", error.message, true);
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  document.getElementById("projectForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const button = form.querySelector('button[type="submit"]');
+    button.disabled = true;
+
+    try {
+      const response = await fetch("/api/projects", {
+        method: "POST",
+        headers: communityHeaders(),
+        body: JSON.stringify({
+          title: document.getElementById("projectTitle").value.trim(),
+          description: document.getElementById("projectDescription").value.trim(),
+          status: document.getElementById("projectStatus").value
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Publication impossible.");
+      }
+
+      form.reset();
+      communityStatus("projectMessage", "✅ Ton projet a été publié !", false);
+      await loadCommunityFeed("/api/projects", "projectsFeed", "projects", "project");
+    } catch (error) {
+      communityStatus("projectMessage", error.message, true);
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  document.getElementById("publicationForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const button = form.querySelector('button[type="submit"]');
+    button.disabled = true;
+
+    try {
+      const response = await fetch("/api/publications", {
+        method: "POST",
+        headers: communityHeaders(),
+        body: JSON.stringify({
+          title: document.getElementById("publicationTitle").value.trim(),
+          content: document.getElementById("publicationContent").value.trim()
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Publication impossible.");
+      }
+
+      form.reset();
+      communityStatus("publicationMessage", "✅ Ta publication a été créée !", false);
+      await loadCommunityFeed(
+        "/api/publications", "publicationsFeed", "publications", "publication"
+      );
+    } catch (error) {
+      communityStatus("publicationMessage", error.message, true);
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+
+  loadCommunity();
   loadMember();
   loadNotifications();
 </script>
